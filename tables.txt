@@ -1,0 +1,12 @@
+AttachmentGroup
+Attachment
+MemberOfParliament
+SaliDBAanestysAsiakirja
+SaliDBAanestysEdustaja
+SaliDBAanestys
+SaliDBIstunto
+SaliDBKohtaAanestys
+SaliDBKohtaAsiakirja
+SaliDBKohta
+SaliDBPuheenvuoro
+VaskiData

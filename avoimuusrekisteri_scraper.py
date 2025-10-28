@@ -62,7 +62,12 @@ async def fetch_all_data():
     print("Scraping activity...")
 
     lobbies_df = pl.DataFrame(lobbies, infer_schema_length=10000)
-    Y_ids = lobbies_df["companyId"].unique().to_list()
+    lobbies_df = lobbies_df.with_columns(
+        pl.when(pl.col("companyId").is_not_null())
+        .then(pl.col("companyId"))
+        .otherwise(pl.col("otherCompanyId"))
+        .alias("Y_id"))
+    Y_ids = lobbies_df["Y_id"].unique().to_list()
 
     url = get_lobby_activity_url()
     activity = []

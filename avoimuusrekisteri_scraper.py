@@ -2,7 +2,6 @@ import csv
 import asyncio
 import requests
 import polars as pl
-import aiohttp
 from tqdm import tqdm
 
 def get_activity_term_url(term):
@@ -10,6 +9,9 @@ def get_activity_term_url(term):
 
 def get_lobby_activity_url():
     return f"https://public.api.avoimuusrekisteri.fi/open-data-activity-notification/company/{{}}"
+
+def get_term_url():
+    return f"https://public.api.avoimuusrekisteri.fi/open-data-term/all"
 
 def get_targets_url():
     return f"https://public.api.avoimuusrekisteri.fi/open-data-target/targets"
@@ -27,6 +29,18 @@ async def fetch_page(session, url, Y_id):
 
 async def fetch_all_data():
 
+
+    # Terms
+    print("Scraping terms...")
+    terms_url = get_term_url()
+    response = requests.get(terms_url)
+    terms = response.json()
+
+    df = pl.DataFrame(terms, infer_schema_length=10000)  
+    df.write_json("lobby_terms.json")
+    print("Terms done!")
+
+
     # Targets
     print("Scraping targets...")
 
@@ -34,49 +48,30 @@ async def fetch_all_data():
     response = requests.get(targets_url)
     targets = response.json()
 
-    write_tsv("lobby_targets", targets)
+    df = pl.DataFrame(targets, infer_schema_length=10000)  
+    df.write_json("lobby_targets.json")
     print("Targets done!")
 
 
-    # Lobbies
-    print("Scraping lobbies...")
+    # Actions
+    print("Scraping actions...")
 
     term = 1
     activity_term_url = get_activity_term_url(term)
     response = requests.get(activity_term_url)
-    lobbies_json = response.json()
-    lobbies = []
+    actions_json = response.json()
+    actions = []
 
-    while lobbies_json:
-        lobbies.extend(lobbies_json)
+    while actions_json:
+        actions.extend(actions_json)
         term += 1
         activity_term_url = get_activity_term_url(term)
         response = requests.get(activity_term_url)
-        lobbies_json = response.json()
+        actions_json = response.json()
 
-    write_tsv("lobbies", lobbies)
-    print("Lobbies done!")
-
-
-    # Activity
-    print("Scraping activity...")
-
-    lobbies_df = pl.DataFrame(lobbies, infer_schema_length=10000)
-    Y_ids = lobbies_df["companyId"].unique().to_list()
-
-    url = get_lobby_activity_url()
-    activity = []
-
-    async with aiohttp.ClientSession() as session:
-        tasks = [fetch_page(session, url, Y_id) for Y_id in Y_ids]
-        with tqdm(total=len(tasks), desc="Scraping activity", unit="lobby") as pbar:
-            for task in asyncio.as_completed(tasks):
-                data = await task
-                activity.extend(data)
-                pbar.update(1)
-            
-    write_tsv("lobby_activity", activity)
-    print("Activity done!")
+    df = pl.DataFrame(actions, infer_schema_length=10000)  
+    df.write_json("lobby_actions.json")
+    print("Actions done!")
 
 if __name__ == "__main__":
     asyncio.run(fetch_all_data())

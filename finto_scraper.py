@@ -27,7 +27,7 @@ def fetch_data():
         
         concept_id = concept.attrib[f'{{{NS["rdf"]}}}about'].split("/")[-1]
         topics.append({
-            "concept_id": concept_id,
+            "topic_id": concept_id,
             "term": term
         })
 

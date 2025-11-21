@@ -32,7 +32,7 @@ def fetch_data():
         })
 
     df = pl.DataFrame(topics)
-    df.write_json("finto.json")
+    df.write_json("finto_topics.json")
 
 if __name__ == "__main__":
     fetch_data()
